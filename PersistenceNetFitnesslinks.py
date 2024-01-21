@@ -1,27 +1,41 @@
+import numpy as np
+import networkx as nx
+import re
 
+import scipy.optimize as spo
+from scipy.optimize import least_squares
+import scipy
+
+# Constraints at dyadic level
 class PersistenceNetFitnesslinks:
     MIN_FITNESS = 1e-5  # -5
 
     def __init__(self, tgraph, symmetric=True):
-        self.verbose = False
+        #self.verbose = False
+        
+        # Storing the instance of TemporalNetworkLoaderSynt, which contains the temporal graph data.
         self.temp_graph = tgraph
+        
+        # Determining the number of time steps and nodes in the temporal graph.
         self.no_steps = len(self.temp_graph.data)
         self.no_nodes = len(self.temp_graph.data[0][2].nodes())
 
+        # Initializing a 'fitness' array,for calculation purposes.
         self.fitness = np.ones(self.no_nodes + int(self.no_nodes * (self.no_nodes - 1) / 2), dtype=np.float64)
 
         self.symmetric = symmetric
 
-        self.max_likelihood = -1e20
-
+        # Initializing matrices B, J, lambda_minus, and lambda_plus, likely for use in calculations.
         self.B = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.J = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.lambda_minus = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.lambda_plus = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.ave_persisting_matrix = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
 
+        # Calculating and storing network statistics relevant to the model.
         self.__fill_vecs()
 
+        # Initializing B, J, lambda_minus, and lambda_plus using the fitness array.
         self.update_bjlambda(self.fitness)
 
 
@@ -219,15 +233,13 @@ class PersistenceNetFitnesslinks:
 
     def solve(self, alfa_in, beta_in):
 
-        initial_alpha = alfa_in  # np.random.rand(self.no_nodes)#
+        initial_alpha = alfa_in  
 
         initial_beta = [0 if self.ave_persisting_aij[i] == 0 else beta_in[i] for i in
                         range(int(self.no_nodes * (self.no_nodes - 1) / 2))]  # beta_in
 
         fitness_0 = np.concatenate(
-            (initial_alpha, initial_beta))  # Ho provato a togliere questo: np.ones(self.no_nodes)
-
-        # [(None, None) for i in range(len(fitness_0))]
+            (initial_alpha, initial_beta)) 
 
         bnds = [(None, None) for i in range(len(alfa_in))] + [
             (0, 0) if self.ave_persisting_aij[i] == 0 else (None, None) for i in
