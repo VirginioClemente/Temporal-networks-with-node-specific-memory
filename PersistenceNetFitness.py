@@ -22,7 +22,7 @@ class PersistenceNetFitness:
         self.no_steps = len(self.temp_graph.data)
         self.no_nodes = len(self.temp_graph.data[0][2].nodes())
 
-        # Initializing a 'fitness' array, presumably for optimization or calculation purposes.
+        # Initializing a 'fitness' array,for calculation purposes.
         self.fitness = np.ones(2 * self.no_nodes, dtype=np.float64)
 
         self.symmetric = symmetric
