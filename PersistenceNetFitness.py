@@ -13,21 +13,30 @@ import scipy
 class PersistenceNetFitness:
 
     def __init__(self, tgraph, symmetric=True):
-        self.verbose = False
+        #self.verbose = False
+
+        # Storing the instance of TemporalNetworkLoaderSynt, which contains the temporal graph data.
         self.temp_graph = tgraph
+
+        # Determining the number of time steps and nodes in the temporal graph.
         self.no_steps = len(self.temp_graph.data)
         self.no_nodes = len(self.temp_graph.data[0][2].nodes())
 
+        # Initializing a 'fitness' array, presumably for optimization or calculation purposes.
         self.fitness = np.ones(2 * self.no_nodes, dtype=np.float64)
 
         self.symmetric = symmetric
 
+        # Initializing matrices B, J, lambda_minus, and lambda_plus, likely for use in calculations.
         self.B = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.J = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.lambda_minus = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.lambda_plus = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
 
+        # Initializing B, J, lambda_minus, and lambda_plus using the fitness array.
         self.__update_bjlambda(self.fitness)
+
+        # Calculating and storing network statistics relevant to the model.
         self.__fill_vecs()
 
     def __fill_vecs(self):
