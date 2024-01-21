@@ -24,7 +24,6 @@ def matrix_to_1(B):
 
     return H
 
-# Classe con cui definiamo la rete da dare in input al modello
 
 class TemporalNetwork():
     def __init__(self, no_nodes, no_steps):
