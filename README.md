@@ -11,5 +11,3 @@ The data related to the application on the real world example of the first paper
 
 
 [1] Clemente, Giulio Virginio, Claudio J. Tessone, and Diego Garlaschelli. "Temporal networks with node-specific memory: unbiased inference of transition probabilities, relaxation times and structural breaks." arXiv preprint arXiv:2311.16981 (2023).
-
-%[3] Eagle, Nathan, Alex Pentland, and David Lazer. "Inferring friendship network structure by using mobile phone data." Proceedings of the national academy of sciences 106.36 (2009): 15274-15278.
