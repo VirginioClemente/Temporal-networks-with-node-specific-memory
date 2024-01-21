@@ -9,7 +9,7 @@ import scipy
 
 
 
-# Vincolo sui nodi
+# Constraints at the node level
 class PersistenceNetFitness:
 
     def __init__(self, tgraph, symmetric=True):
@@ -31,52 +31,51 @@ class PersistenceNetFitness:
         self.__fill_vecs()
 
     def __fill_vecs(self):
+        # This method is used to calculate the average degree and the average persistent degree for each node.
 
+        # Initialize arrays to store degree (vec_k) and persistent degree (vec_h) for each node.
         self.vec_k = np.zeros(self.no_nodes, dtype=np.float64)
         self.vec_h = np.zeros(self.no_nodes, dtype=np.float64)
-
+   
+        # Initialize a 2D array to store the persistent degree at each time step.
         self.vec_h_t = np.zeros((self.no_steps, self.no_nodes))
 
         for i_step in range(self.no_steps):
             block_id, current_time, g = self.temp_graph.data[i_step]
             for [n1, n2] in g.edges():
-                if n1 == n2: continue
+                if n1 == n2: continue # Skip self-loops
 
                 self.vec_k[int(n1)] += 1.
                 self.vec_k[int(n2)] += 1.
 
+        # Average the degree over the number of steps
         self.vec_k /= float(self.no_steps)
 
-        for i_step in range(self.no_steps):  # Tolto - 1
+        # Calculate the persistent degree for each node.
+        for i_step in range(self.no_steps):  
             block_id, current_time, g0 = self.temp_graph.data[i_step]
             block_id, current_time, g1 = self.temp_graph.data[(i_step + 1) % self.no_steps]
             for [n1, n2] in g0.edges():
-                if n1 == n2: continue
+                if n1 == n2: continue # Skip self-loops
                 if g1.has_edge(n1, n2):
+                    # Increment persistent degree if the edge persists in the next time step.
                     self.vec_h[int(n1)] += 1.
                     self.vec_h[int(n2)] += 1.
 
+            # Store the persistent degree at this time step.
             self.vec_h_t[i_step, :] = self.vec_h
-        # Devi rimuovere la riga sottostante quando calcoli vec_h medio per fare il grafico.
-        list_h = []
-        h = []
-        for i in range(len(self.vec_h_t)):
-            if i > 0:
-                h = self.vec_h_t[i, :] - self.vec_h_t[i - 1, :]
-                list_h.append(h)
-
-            if i == 0:
-                h = self.vec_h_t[i, :]
-                list_h.append(h)
-
-        # self.vec_h_t = list_h
-
+            
+        # Average the persistent degree over the number of steps.
         self.vec_h /= float(self.no_steps)
 
     def __update_bjlambda(self, fitness):
+        # This function constructs functional quantities for the calculation of likelihood.
+
+        # Splitting the 'fitness' array into 'alpha' and 'beta' components.
         alpha = fitness[:self.no_nodes]
         beta = fitness[self.no_nodes:]
-
+        
+        # Iterating over all pairs of nodes to calculate the B and J matrices.
         for i in range(self.no_nodes):
             for j in range(i, self.no_nodes):
                 ai = alpha[i]
@@ -84,8 +83,11 @@ class PersistenceNetFitness:
                 bi = beta[i]
                 bj = beta[j]
 
+                # Calculating the B matrix elements.
                 self.B[i, j] = - 0.5 * (ai + aj + bi + bj) / float(self.no_steps)
                 self.B[j, i] = self.B[i, j]
+
+                # Calculating the J matrix elements.
                 self.J[i, j] = - 0.25 * (bi + bj) / float(self.no_steps)
                 self.J[j, i] = self.J[i, j]
 
@@ -95,45 +97,53 @@ class PersistenceNetFitness:
                                                                                                    dtype=np.float64),
             dtype=np.float128)
 
+        # Returning the calculated lambda_plus and lambda_minus for further use.
         self.lambda_plus = lambda_term1 + lambda_term2
         self.lambda_minus = lambda_term1 - lambda_term2
 
-        lambda_p = self.lambda_plus
-        lambda_m = self.lambda_minus
-
-        return lambda_p, lambda_m
+        return self.lambda_plus, self.lambda_minus
 
     def fun_likelihood(self, x):
+        # Update the lambda_plus and lambda_minus matrices based on the current parameter set 'x'.
         lp, lm = self.__update_bjlambda(x)
-        acc = 0.
-        H = 0.
-        H_0 = 0.
-        t_2 = 0.
-
+        # Initializing accumulators for different parts of the likelihood calculation.
+        acc = 0.  # Accumulator for the final log-likelihood.
+        H = 0.    # Sum related to the nodes' degrees and persistent degrees.
+        H_0 = 0.  # Sum related to the alpha and beta parameters.
+        t_2 = 0.  # Sum related to the log of the lambda terms.
+    
+        # Splitting the parameter array 'x' into 'alpha' and 'beta' components.
         alpha = x[:self.no_nodes]
         beta = x[self.no_nodes:]
-
+    
+        # Calculating the H term using node degrees (vec_k) and persistent degrees (vec_h).
         for j in range(self.no_nodes):
             aj = alpha[j]
             bj = beta[j]
             H += aj * self.vec_k[j] + bj * self.vec_h[j]
-
+    
+            # Calculating the H_0 and t_2 terms.
             for i in range(j):
                 ai = alpha[i]
                 bi = beta[i]
-
+    
+                # Increment H_0 based on alpha and beta parameters.
                 H_0 += (ai + aj) / 2 + (bi + bj) / 4
-
-                t_2 += np.log(np.power(lp[i, j], self.no_steps, dtype=np.float64) + np.power(lm[i, j], self.no_steps,
-                                                                                             dtype=np.float64),
-                              dtype=np.float64)  # lp[i,j]**self.no_steps  + lm[i,j]**self.no_steps
-
+    
+                # Increment t_2 based on the log of the lambda terms.
+                t_2 += np.log(np.power(lp[i, j], self.no_steps, dtype=np.float64) +
+                              np.power(lm[i, j], self.no_steps, dtype=np.float64), dtype=np.float64)
+    
+        # Final calculation of the log-likelihood.
         acc = -(H - H_0) - t_2
-
+    
+        # Returning the negative of the log-likelihood for optimization purposes.
         return -acc
 
     def derivates(self, i, j):
-
+        #This function calculates the derivatives of lambda_plus and lambda_minus with respect to alpha and beta parameters for a given pair of nodes (i, j).
+        
+        # Initialization of various terms used in the derivative calculations.
         T = self.no_steps
         eJ = np.exp(self.J[i, j], dtype=np.float64)
         sinhB = np.sinh(self.B[i, j], dtype=np.float64)
@@ -141,8 +151,11 @@ class PersistenceNetFitness:
         e_4J = np.exp(-4 * self.J[i, j], dtype=np.float64)
         root = np.sqrt(sinhB ** 2 + np.exp(-4 * self.J[i, j], dtype=np.float128), dtype=np.float64)
 
+        # Calculation of the derivatives of lambda_plus and lambda_minus w.r.t alpha.
         D_Lambda_plus_D_Alfa = -1 / (2 * T) * eJ * sinhB + eJ / (2 * root) * (2 * sinhB * coshB) / (-2 * T)
         D_Lambda_minus_D_Alfa = -1 / (2 * T) * eJ * sinhB - eJ / (2 * root) * (2 * sinhB * coshB) / (-2 * T)
+
+        # Calculation of the derivatives of lambda_plus and lambda_minus w.r.t beta.
         D_Lambda_plus_D_Beta = (-1 / (2 * T)) * eJ * sinhB - (1 / (4 * T)) * eJ * coshB + (
                     (-1 / (4 * T)) * eJ * root + eJ / (2 * root) * (-1 / T * sinhB * coshB + 1 / T * e_4J))
         D_Lambda_minus_D_Beta = (-1 / (2 * T)) * eJ * sinhB - (1 / (4 * T)) * eJ * coshB - (
@@ -151,7 +164,8 @@ class PersistenceNetFitness:
         return D_Lambda_plus_D_Alfa, D_Lambda_minus_D_Alfa, D_Lambda_plus_D_Beta, D_Lambda_minus_D_Beta
 
     def loglikelihood_prime_persisting(self, theta):
-
+        #This function calculates the gradient of the log-likelihood function with respect to the parameters theta (composed of alpha and beta).
+        
         k = self.vec_k
         h = self.vec_h
         n = self.no_nodes
@@ -192,29 +206,35 @@ class PersistenceNetFitness:
         return f
 
     def solve(self, x, y):
-
+        # Initialization of initial alpha and beta values from arguments x and y.
         initial_alpha = (x)
         initial_beta = (y)
 
+        # Combining alpha and beta into a single array for the optimization algorithm.
         fitness_0 = np.concatenate((initial_alpha, initial_beta))
 
+        # Setting bounds for the optimization. Each parameter is constrained to be between -1000 and 1000.
         bnds = [(-1e+3, 1e+3) for i in range(self.no_nodes)] + [(-1e+3, 1e+3) for i in range(self.no_nodes)]
         # bnds = [(None, None) for i in range(self.no_nodes)] + [(None, None) for i in range(self.no_nodes)]
 
+        # Performing the optimization using SciPy's minimize function.
         fitness = spo.minimize(fun=self.fun_likelihood, bounds=bnds, x0=fitness_0,
                                jac=self.loglikelihood_prime_persisting, method='L-BFGS-B', tol=1e-5,
                                options={'maxiter': 600, 'eps': 1e-9, 'gtol': 1e-07})
 
         print(fitness.message)
+        # Storing the optimized parameters.
         self.reduced_fitness = fitness.x
 
         self.fitness_alpha = self.reduced_fitness[:self.no_nodes]
         self.fitness_beta = self.reduced_fitness[self.no_nodes:]
 
+        # Calculating transformed fitness parameters
         self.fitness_x = np.exp(- self.fitness_alpha / self.no_steps, dtype=np.float64)
         self.fitness_y = np.exp(- self.fitness_beta / self.no_steps, dtype=np.float64)
 
         x = self.fitness_x
         y = self.fitness_y
 
+        # Returning the function value at the optimized parameters.
         return fitness.fun
