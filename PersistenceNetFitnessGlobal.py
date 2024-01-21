@@ -5,7 +5,6 @@ from operator import itemgetter
 import scipy.optimize as spo
 
 class PersistenceNetFitnessGlobal:
-    MIN_FITNESS = 1e-5  # -5
 
     def __init__(self, tgraph, symmetric=True):
         self.verbose = False
@@ -15,7 +14,6 @@ class PersistenceNetFitnessGlobal:
 
         self.fitness = np.ones(self.no_nodes + 1)
         self.symmetric = symmetric
-        self.max_likelihood = -1e20
 
         self.B = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
         self.J = np.zeros((self.no_nodes, self.no_nodes), dtype=np.float64)
@@ -53,8 +51,8 @@ class PersistenceNetFitnessGlobal:
         self.average_h = np.sum(self.vec_h) / self.no_nodes
 
     def __update_bjlambda(self, fitness):
-        alpha = fitness[:self.no_nodes]  # + 1e-8
-        beta = fitness[self.no_nodes:]  # +1e-8
+        alpha = fitness[:self.no_nodes]  
+        beta = fitness[self.no_nodes:]  
 
         for i in range(self.no_nodes):
             for j in range(i, self.no_nodes):
@@ -64,9 +62,9 @@ class PersistenceNetFitnessGlobal:
                 bj = beta[0]
 
                 self.B[i, j] = - 0.5 * (ai + aj + bi + bj) / float(self.no_steps)
-                self.B[j, i] = self.B[i, j]  # - 0.5 * (ai+aj+bi+bj)  / float(self.no_steps)
+                self.B[j, i] = self.B[i, j]  
                 self.J[i, j] = - 0.25 * (bi + bj) / float(self.no_steps)
-                self.J[j, i] = self.J[i, j]  # - 0.25 * (bi+bj)  / float(self.no_steps)
+                self.J[j, i] = self.J[i, j]  
 
         lambda_term1 = np.cosh(self.B, dtype=np.float128) * np.exp(self.J, dtype=np.float128)
         lambda_term2 = np.sqrt(
