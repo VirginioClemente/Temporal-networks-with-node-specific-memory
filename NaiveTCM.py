@@ -103,7 +103,7 @@ class NaiveNetFitness:
             k = vec_k
 
             x_initial_values = np.random.rand(
-                self.no_nodes)  # plus one to prevent dividing by zero np.sqrt(np.sum(k) + 1) * np.ones(self.no_nodes)
+                self.no_nodes)  # plus one to prevent dividing by zero 
 
             x_initial_values = x_initial_values[k != 0]
 
