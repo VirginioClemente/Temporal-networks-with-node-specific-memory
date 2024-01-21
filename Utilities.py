@@ -25,15 +25,8 @@ def matrix_to_1(B):
     return H
 
 
-class TemporalNetwork():
-    def __init__(self, no_nodes, no_steps):
-        self.no_nodes = no_nodes
-        self.no_steps = no_steps
 
-        self.verbose = False
-
-
-class TemporalNetworkLoaderSynt(TemporalNetwork):
+class TemporalNetworkLoaderSynt():
 
     def __init__(self, data_synt, start, stop, symmetric=True):
         # Initialization with synthetic data and configuration parameters.
