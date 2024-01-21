@@ -65,6 +65,7 @@ class NaiveNetFitness:
 
         return - likelihood
 
+    # Here I solve the system of equations
     def solve_eq(self):
 
         def equations_to_solve(p, k):
@@ -136,6 +137,7 @@ class NaiveNetFitness:
 
         self.fitness_x = numerically_solve_TN(self.vec_k)
 
+    # Here I optimize loglikelihood
     def solve_likelihood(self):
 
         fitness_0 = np.random.random(self.no_nodes) + 20
