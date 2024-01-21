@@ -1,5 +1,7 @@
 # MaxEnt-For-Temporal-Networks
 
+### This repository is under construction.
+
 This repository contains the code for the implementation of the study conducted in the following works: [1] and [2].
 The first study concerns the definition of a maximum entropy model with temporal constraints. For further information regarding the model, please refer to the paper [1].
 We have implemented various types of models, varying the degree of heterogeneity of the constraints. For each of these models, a Python class has been created. The 'experiments' notebook contains the results of applying these models to a real network.
