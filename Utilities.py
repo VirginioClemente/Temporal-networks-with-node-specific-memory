@@ -37,6 +37,11 @@ class TemporalNetwork():
 class TemporalNetworkLoaderSynt(TemporalNetwork):
 
     def __init__(self, data_synt, start, stop, symmetric=True):
+        # Initialization with synthetic data and configuration parameters.
+        """
+        data_synt: This is a collection of data representing different states or snapshots of a temporal network.
+        start and stop: These parameters define the range of time steps or snapshots of the network to be considered.
+        """
         self.data_synt = data_synt
         self.symmetric = symmetric
         self.start = start
@@ -44,32 +49,33 @@ class TemporalNetworkLoaderSynt(TemporalNetwork):
         self.__load()
 
     def __load(self):
+        # Initializing properties to store network data and statistics.
         self.data = []
         self.nodes = set()
 
         self.no_steps = 0
 
+        # Processing each element in the synthetic data.
         for el in self.data_synt:
-            # h = filename.split("_")
             block_id = el[0]
             current_time = el[0]
 
             self.curr_id = block_id
             self.no_steps += 1
 
-            # dati = el[1]
-            curr_net = el[1]  # nx.from_numpy_matrix(np.matrix(dati), create_using=nx.DiGraph)
+             # Loading the network data for the current time step.
+            curr_net = el[1]  
             if self.symmetric:
                 curr_net = curr_net.to_undirected()
             self.nodes.update(curr_net.nodes())
             self.data.append([block_id, current_time, curr_net])
             self.data = sorted(self.data,
-                               key=itemgetter(1))  # Ho messo in ordine crescente(rispetto al tempo) le reti lette.
+                               key=itemgetter(1))   # Sorting the data by time and slicing based on start and stop parameters.
         self.data = self.data[self.start:self.stop]
-        # self.data = self.data[:]
         self.no_nodes = max(self.nodes) + 1
 
     def __iter__(self):
+        # Making the class iterable, yielding each network snapshot in order.
         for x in self.data:
             yield x
 
