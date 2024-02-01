@@ -6,17 +6,17 @@ We have implemented various types of models, varying the degree of heterogeneity
 
 The files listed above contain the following:
 
-- PersistenceNetFitnesslinks.py: Implementation of the model with memory and link constraints.
-- PersistenceNetFitnessGlobal.py: Implementation of the model with memory and global constraints.
-- PersistenceNetFitness.py: Implementation of the model with memory and node-level constraints.
-- NaiveTCM.py: Implementation of the model without memory and node-level constraints.
+- PersistenceNetFitnesslinks.py: Implementation of the model with memory using dyadic constraints.
+- PersistenceNetFitnessGlobal.py: Implementation of the model with memory using global constraint.
+- PersistenceNetFitness.py: Implementation of the model with memory using node-level constraints.
+- NaiveTCM.py: Implementation of the model without memory using node-level constraints.
 
 In the 'examples' folder, there are three notebooks:
 - Test memory.ipynb
 - Test no memory.ipynb
 - Structural Breaks Memory, Reshuffling, and MSE.ipynb
 
-The first two notebooks contain tests and results reported in the reference paper for models with and without memory. The last notebook, Structural Breaks Memory, Reshuffling, and MSE.ipynb, includes additional results from the main paper as well as the algorithm used for structural breaks detection.
+The first two notebooks contain tests and results reported in the reference paper [1] for models with and without memory. The last notebook, Structural Breaks Memory, Reshuffling, and MSE.ipynb, includes additional results from the main paper as well as the algorithm used for structural breaks detection.
 
 
 The data related to the application on the real world example of the first paper, are available upon request at the following link: http://realitycommons.media.mit.edu/realitymining4.html.
